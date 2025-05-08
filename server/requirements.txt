@@ -1,34 +1,35 @@
 # ----------------------------------------
 # 🔧 Core Flask Framework
 # ----------------------------------------
-Flask               # Web framework for building the backend
-Flask-SQLAlchemy    # ORM integration with SQLAlchemy
-Flask-Cors          # Handles Cross-Origin Resource Sharing
-Flask-Migrate       # Manages database migrations
+Flask                   # Web framework for building the backend
+Flask-SQLAlchemy        # ORM integration with SQLAlchemy
+Flask-Cors              # Handles Cross-Origin Resource Sharing
+Flask-Migrate           # Manages database migrations
 
 # ----------------------------------------
 # 🗃️ Database & ORM
 # ----------------------------------------
-SQLAlchemy          # SQL toolkit and ORM used by Flask-SQLAlchemy
-alembic             # Handles schema migrations with Flask-Migrate
+SQLAlchemy              # SQL toolkit and ORM used by Flask-SQLAlchemy
+alembic                 # Handles schema migrations with Flask-Migrate
+psycopg2-binary         # PostgreSQL driver for Python (Render DB support)
 
 # ----------------------------------------
 # ☁️ Google Cloud Integration
 # ----------------------------------------
-google-cloud-storage  # Library for interacting with Google Cloud Storage
+google-cloud-storage    # Library for interacting with Google Cloud Storage
 
 # ----------------------------------------
 # 🔐 Environment Variable Management
 # ----------------------------------------
-python-dotenv       # Loads environment variables from .env files
+python-dotenv           # Loads environment variables from .env files
 
 # ----------------------------------------
 # 🔑 Authentication / Security
 # ----------------------------------------
-PyJWT               # JWT token encoding/decoding for login & password resets
-itsdangerous        # Secure token serializer used in password reset links
+PyJWT                   # JWT token encoding/decoding for login & password resets
+itsdangerous            # Secure token serializer used in password reset links
 
 # ----------------------------------------
 # 🚀 Production WSGI Server
 # ----------------------------------------
-gunicorn            # Recommended WSGI server for running Flask in production
+gunicorn                # Recommended WSGI server for running Flask in production
