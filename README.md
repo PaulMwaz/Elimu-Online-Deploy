@@ -1,10 +1,10 @@
 # 📘 Elimu-Online
 
-**Elimu-Online** is a full-stack e-learning platform designed for students and teachers to access digital educational resources in a structured, curriculum-aligned format. It supports secure login, file uploads, categorized browsing, and integration with cloud storage and mobile payments.
+**Elimu-Online** is a full-stack e-learning platform designed for students and teachers to access digital educational resources in a structured, curriculum-aligned format. It supports secure login, file uploads, categorized browsing, and integration with cloud storage.
 
 ---
 
-## ✅ Phase 5 Requirements Met
+## ✅ Project Requirements Met
 
 - ✔ **Backend:** Flask + SQLAlchemy
 - ✔ **Many-to-Many Relationship:** `users` ↔ `resources` via `user_resources`
@@ -149,4 +149,5 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 © 2025 Elimu-Online — Empowering learners, one file at a time.
-#DevelopedByPaul
+
+👨‍💻 Author: Paul Kyalo
