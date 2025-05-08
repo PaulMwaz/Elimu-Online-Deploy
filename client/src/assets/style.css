@@ -1,0 +1,242 @@
+/* -----------------------------------------
+   ✅ Tailwind Directives
+----------------------------------------- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -----------------------------------------
+   🌐 Global Styling & Layout
+----------------------------------------- */
+body {
+  @apply font-sans bg-light text-textMain;
+}
+
+.dark body {
+  @apply bg-gray-900 text-white;
+}
+
+.dark nav {
+  @apply bg-gray-800 text-white;
+}
+
+.dark footer {
+  @apply bg-gray-800 text-white;
+}
+
+/* -----------------------------------------
+   📱 Container & Section Utilities
+----------------------------------------- */
+.container {
+  @apply max-w-7xl mx-auto px-4;
+}
+
+.section {
+  @apply py-12;
+}
+
+/* -----------------------------------------
+   🔘 Dark Mode Toggle Switch Styling
+----------------------------------------- */
+input[type="checkbox"] + div > .toggle-dot {
+  @apply transform translate-x-0;
+}
+
+input[type="checkbox"]:checked + div > .toggle-dot {
+  @apply transform translate-x-5 bg-blue-500;
+}
+
+/* -----------------------------------------
+   🖼️ HeroSlider Styling (Prevents Gray Flash)
+----------------------------------------- */
+.slider {
+  @apply relative w-full h-full;
+  position: relative;
+  overflow: hidden;
+  background-image: url("/images/slide1.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.slider img {
+  @apply absolute top-0 left-0 w-full h-full;
+  object-fit: cover;
+  object-position: center center;
+  transition: opacity 1s ease-in-out;
+  animation: fadeSlide 12s infinite;
+  opacity: 0;
+  z-index: 0;
+}
+
+.slider img:nth-child(1) {
+  animation-delay: 0s;
+}
+.slider img:nth-child(2) {
+  animation-delay: 4s;
+}
+.slider img:nth-child(3) {
+  animation-delay: 8s;
+}
+
+/* 🎞️ Fade animation used in HeroSlider */
+@keyframes fadeSlide {
+  0%,
+  5% {
+    opacity: 0;
+    z-index: 0;
+  }
+  10%,
+  30% {
+    opacity: 1;
+    z-index: 1;
+  }
+  35%,
+  100% {
+    opacity: 0;
+    z-index: 0;
+  }
+}
+
+/* -----------------------------------------
+   🎤 Hero Text Overlay (Centered on Image)
+----------------------------------------- */
+.hero-text {
+  @apply absolute inset-0 flex items-center justify-center text-center px-4;
+}
+
+.hero-text h1 {
+  @apply text-white text-2xl md:text-4xl lg:text-5xl font-bold;
+}
+
+/* -----------------------------------------
+   💬 Testimonials Section
+----------------------------------------- */
+.testimonials_scroll {
+  @apply flex overflow-x-auto gap-4 snap-x snap-mandatory px-4;
+}
+
+.testimonials_card {
+  @apply flex-none w-80 bg-white dark:bg-gray-700 p-6 rounded-lg shadow snap-center transition duration-300;
+}
+
+/* -----------------------------------------
+   👩‍💻 Meet the Team Cards
+----------------------------------------- */
+.team_card {
+  @apply bg-gray-100 dark:bg-gray-800 p-6 rounded-lg shadow text-center transition duration-300;
+}
+
+/* -----------------------------------------
+   🎯 General Button Styles
+----------------------------------------- */
+.btn {
+  @apply px-4 py-2 rounded bg-secondary text-white hover:bg-blue-700 transition duration-300;
+}
+
+.btn-outline {
+  @apply px-4 py-2 border border-secondary text-secondary hover:bg-secondary hover:text-white rounded transition;
+}
+
+/* -----------------------------------------
+   ⬇️ Scroll Reveal Animation for Footer
+----------------------------------------- */
+#main-footer {
+  @apply opacity-0 translate-y-10 transition-all duration-700;
+}
+
+#main-footer.visible {
+  @apply opacity-100 translate-y-0;
+}
+
+/* -----------------------------------------
+   📄 File Cards (WhatsApp-style UI)
+----------------------------------------- */
+.file-card {
+  @apply bg-white dark:bg-gray-800 p-4 rounded shadow flex flex-col justify-between transition duration-200;
+}
+
+.file-card:hover {
+  @apply border border-blue-500 scale-105;
+}
+
+.file-name {
+  @apply text-sm font-medium text-gray-800 dark:text-white truncate mb-2;
+}
+
+.file-meta {
+  @apply flex items-center gap-3 mt-auto;
+}
+
+.file-icon {
+  @apply h-8 w-8;
+}
+
+.download-link {
+  @apply text-blue-600 underline hover:text-blue-800 text-sm;
+}
+
+/* 🔍 Modal visibility control */
+#previewModal {
+  display: none;
+}
+
+#previewModal.flex {
+  display: flex !important;
+}
+
+/* -----------------------------------------
+   🧭 Resource Page Controls (Filters/Search)
+----------------------------------------- */
+.resource-controls {
+  @apply flex flex-col md:flex-row flex-wrap md:items-center justify-between gap-4 mb-6;
+}
+
+.resource-controls select,
+.resource-controls input {
+  @apply p-2 border rounded w-full md:w-auto flex-1;
+}
+
+.resource-controls select.sort-dropdown {
+  @apply md:w-[200px];
+}
+
+/* -----------------------------------------
+   📑 Pagination Styling
+----------------------------------------- */
+.pagination {
+  @apply flex justify-center mt-6 gap-2;
+}
+
+.pagination button {
+  @apply px-3 py-1 rounded border border-gray-300 bg-white text-sm hover:bg-blue-100;
+}
+
+.pagination button.active {
+  @apply bg-blue-600 text-white font-semibold;
+}
+
+/* -----------------------------------------
+   🧭 Sidebar Navigation
+----------------------------------------- */
+.sidebar {
+  @apply hidden md:block bg-secondary text-white w-64 min-h-screen fixed left-0 top-0 p-4;
+}
+
+.sidebar nav a {
+  @apply block py-2 px-3 rounded hover:bg-blue-700 transition;
+}
+
+/* -----------------------------------------
+   📄 Main Content Wrapper (Pushed by Sidebar)
+----------------------------------------- */
+.content-wrapper {
+  @apply ml-0 md:ml-64 flex-grow px-4 py-6;
+  min-height: 100vh;
+}
+
+/* -----------------------------------------
+   🧭 Responsive Grid Cards
+----------------------------------------- */
+.card-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6;
+}

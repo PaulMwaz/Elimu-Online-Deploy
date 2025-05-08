@@ -1,0 +1,21 @@
+# ----------------------------------------
+# 🔧 Flask and Extensions
+# ----------------------------------------
+Flask                    # Web framework
+Flask-SQLAlchemy         # ORM integration
+Flask-Cors               # Cross-Origin Resource Sharing support
+
+# ----------------------------------------
+# 🔐 Environment Configuration
+# ----------------------------------------
+python-dotenv            # Load environment variables from .env files
+
+# ----------------------------------------
+# ☁️ Google Cloud Integration
+# ----------------------------------------
+google-cloud-storage     # GCS client library for file uploads
+
+# ----------------------------------------
+# 🔐 Security & Utilities
+# ----------------------------------------
+Werkzeug                 # Password hashing & utilities

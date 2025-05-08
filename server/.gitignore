@@ -1,0 +1,107 @@
+# ========================================
+# 🐍 Python Artifacts & Compiled Files
+# ========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ========================================
+# 🧪 Testing & Coverage Artifacts
+# ========================================
+.pytest_cache/
+.tox/
+.nox/
+.hypothesis/
+coverage.xml
+.coverage
+.coverage.*
+.cache
+*.cover
+nosetests.xml
+htmlcov/
+
+# ========================================
+# 💾 Databases & App State
+# ========================================
+*.db
+*.sqlite3
+*.sql
+*.bak
+instance/
+
+# ========================================
+# 📦 Virtual Environments
+# ========================================
+venv/
+.venv/
+env/
+ENV/
+
+# ========================================
+# 🛠 Build Artifacts
+# ========================================
+build/
+dist/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ========================================
+# 📁 Alembic Migrations (compiled)
+# ========================================
+migrations/*.pyc
+migrations/__pycache__/
+migrations/versions/__pycache__/
+
+# ========================================
+# 🔐 Secrets & Environment Variables
+# ========================================
+.env
+.env.*
+*.env
+*.key
+*.pem
+
+# ========================================
+# ☁️ Google Cloud Credentials
+# ========================================
+*.json                 # Ignore all .json by default
+!gcp-example.json      # Whitelist example for documentation
+
+# ========================================
+# ⚙️ Vite / Node.js Artifacts (Frontend)
+# ========================================
+node_modules/
+dist/
+.vite/
+.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================================
+# 🧠 Editor Configs
+# ========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ========================================
+# 🌍 Deployment Files
+# ========================================
+render.yaml
+.gcloudignore
+.dockerignore
+*.log
+*.pid
+.DS_Store
+Thumbs.db
+
+# ========================================
+# 🔎 Linters & Formatters
+# ========================================
+.pylint.d/
+.prettier-cache/

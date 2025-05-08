@@ -1,0 +1,111 @@
+# ----------------------------------------
+# 🔒 Sensitive Files & Secrets
+# ----------------------------------------
+# Prevent secrets like environment configs and credentials from being committed
+.env
+.env.*.local
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+*.gcp.json
+*.firebase.json
+*.credentials.json
+*service-account*.json
+*elimu-online*.json
+
+# Allow .gitignore itself to remain tracked
+!.gitignore
+
+# ----------------------------------------
+# 🧱 Node.js & Vite Build Files (Frontend)
+# ----------------------------------------
+# Exclude build artifacts and dependencies from Vite and Node.js
+node_modules/
+dist/
+build/
+.vite/
+
+# ----------------------------------------
+# 🐍 Python (Flask) Files (Backend)
+# ----------------------------------------
+# Ignore Python bytecode, local envs, and compiled cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+instance/
+.env.bak
+.mypy_cache/
+.pytest_cache/
+*.sqlite3
+*.db
+
+# Ignore database migration history
+migrations/
+
+# Pipenv / Poetry lock files
+Pipfile.lock
+poetry.lock
+
+# Local Python virtual environments
+venv/
+.venv/
+
+# ----------------------------------------
+# 🧪 Logs & Debug Files
+# ----------------------------------------
+# Ignore debug logs from npm, yarn, and pip
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pip-log.txt
+coverage/
+*.cover
+*.log
+
+# ----------------------------------------
+# 🧠 IDE & System Junk Files
+# ----------------------------------------
+# Common IDE and OS-specific temporary files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+.Trashes
+*.bak
+
+# ----------------------------------------
+# 🚀 Deployment Build Files
+# ----------------------------------------
+# Exclude packaged artifacts and deploy bundles
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# ----------------------------------------
+# 🧪 Test Output
+# ----------------------------------------
+# Ignore test coverage, cache, and reporting artifacts
+htmlcov/
+pytest-debug.log
+.pyre/
+.cache/
+.tox/
+nosetests.xml
+coverage.xml
+test-results/
+
+# ----------------------------------------
+# 🔧 Misc
+# ----------------------------------------
+# Catch-all for miscellaneous untracked artifacts
+*.local
+*.lock
+*.orig
+*.tmp
+*.backup
