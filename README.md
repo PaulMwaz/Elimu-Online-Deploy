@@ -48,7 +48,8 @@
 
 ```bash
 cd server
-pip install -r requirements.txt
+pipenv install
+pipenv shell
 python run.py
 ```
 
