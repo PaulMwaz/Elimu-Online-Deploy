@@ -23,6 +23,12 @@ google-cloud-storage  # Library for interacting with Google Cloud Storage
 python-dotenv       # Loads environment variables from .env files
 
 # ----------------------------------------
+# 🔑 Authentication / Security
+# ----------------------------------------
+PyJWT               # JWT token encoding/decoding for login & password resets
+itsdangerous        # Secure token serializer used in password reset links
+
+# ----------------------------------------
 # 🚀 Production WSGI Server
 # ----------------------------------------
 gunicorn            # Recommended WSGI server for running Flask in production
