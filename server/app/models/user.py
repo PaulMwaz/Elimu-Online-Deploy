@@ -1,53 +1,65 @@
-# 📁 server/app/models/user.py
-
 from .. import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# ✅ Association table for many-to-many relationship: Users ↔ Resources
+# =====================================
+# 🔗 Association Table: Users ↔ Resources (Many-to-Many)
+# =====================================
 user_resources = db.Table(
     'user_resources',
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),         # FK to user
-    db.Column('resource_id', db.Integer, db.ForeignKey('resources.id'), primary_key=True)  # FK to resource
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('resource_id', db.Integer, db.ForeignKey('resources.id'), primary_key=True)
 )
 
+# =====================================
+# 👤 User Model Definition
+# =====================================
 class User(db.Model):
-    __tablename__ = 'users'  # ✅ Explicit table name for clarity
+    __tablename__ = 'users'  # Explicit table name
 
-    id = db.Column(db.Integer, primary_key=True)  # 🔑 Unique user ID
-    full_name = db.Column(db.String(100), nullable=False)  # User's full name
-    email = db.Column(db.String(120), unique=True, nullable=False)  # Must be unique
-    password_hash = db.Column(db.String(255), nullable=False)  # Hashed password
-    is_admin = db.Column(db.Boolean, default=False)  # Flag for admin-level access
-    
-    # 🔐 Optional field for storing reset password tokens
-    reset_token = db.Column(db.String(255), nullable=True)
+    id = db.Column(db.Integer, primary_key=True)  # Primary key
+    full_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    reset_token = db.Column(db.String(255), nullable=True)  # Optional reset token
 
-    # 🔁 Many-to-Many: User ↔ Resources
+    # =====================================
+    # 🔁 Relationships
+    # =====================================
+
+    # Many-to-Many: Users <-> Resources
     resources = db.relationship(
-        "Resource",                  # Resource model
-        secondary=user_resources,    # Link via association table
-        back_populates="users",      # Reflect in Resource model
+        "Resource",
+        secondary=user_resources,
+        back_populates="users",
         lazy="subquery"
     )
 
-    # 🔁 One-to-Many: User → Purchases
+    # One-to-Many: User → Purchases
     purchases = db.relationship(
-        "Purchase",                 # Purchase model
-        back_populates="user",      # Reflect in Purchase model
+        "Purchase",
+        back_populates="user",
         lazy="subquery"
     )
 
-    # 🔁 One-to-Many: User → Feedback
+    # One-to-Many: User → Feedback
     feedbacks = db.relationship(
-        "Feedback",                 # Feedback model
-        back_populates="user",      # Reflect in Feedback model
+        "Feedback",
+        back_populates="user",
         lazy="subquery"
     )
 
+    # =====================================
+    # 🔐 Password Methods
+    # =====================================
     def set_password(self, password):
-        """🔒 Hash and store the user's password securely."""
+        """🔒 Securely hash and store the user's password."""
+        print(f"🔐 Hashing password for user: {self.email}")
         self.password_hash = generate_password_hash(password)
+        print("✅ Password hash generated.")
 
     def check_password(self, password):
-        """🔑 Validate a plaintext password against the hashed value."""
-        return check_password_hash(self.password_hash, password)
+        """🔑 Validate a plaintext password against the stored hash."""
+        is_valid = check_password_hash(self.password_hash, password)
+        print(f"🔍 Password validation for {self.email}: {'valid' if is_valid else 'invalid'}")
+        return is_valid

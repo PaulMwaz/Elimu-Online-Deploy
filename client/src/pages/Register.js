@@ -1,11 +1,9 @@
-// Renders the registration form and handles user sign-up logic
 export function Register() {
   const section = document.createElement("section");
   section.className =
     "min-h-screen bg-cover bg-center flex items-center justify-center px-4 py-24";
   section.style.backgroundImage = "url('/images/register-bg.jpg')";
 
-  // Determine API endpoint based on environment
   const isLocal =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
@@ -13,7 +11,6 @@ export function Register() {
     ? "http://localhost:5555"
     : "https://elimu-online.onrender.com";
 
-  // Inject form HTML
   section.innerHTML = `
     <div class="bg-white bg-opacity-90 backdrop-blur-md p-6 md:p-8 rounded shadow-lg w-full max-w-[380px] md:max-w-[420px]">
       <h1 class="text-2xl md:text-3xl font-bold text-center text-blue-600 mb-2">Create Your Account</h1>
@@ -61,14 +58,12 @@ export function Register() {
     </div>
   `;
 
-  // Add interactivity after DOM is rendered
   setTimeout(() => {
     const toggleBtn = document.getElementById("togglePassword");
     const passwordInput = document.getElementById("registerPassword");
     const confirmInput = document.getElementById("confirmPassword");
     const msgBox = document.getElementById("registerMessage");
 
-    // Toggle password visibility
     toggleBtn.addEventListener("click", () => {
       const isHidden = passwordInput.type === "password";
       passwordInput.type = isHidden ? "text" : "password";
@@ -76,7 +71,6 @@ export function Register() {
       toggleBtn.textContent = isHidden ? "Hide" : "Show";
     });
 
-    // SPA navigation for internal links
     document.querySelectorAll("[data-link]").forEach((link) => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
@@ -85,7 +79,6 @@ export function Register() {
       });
     });
 
-    // Handle form submission
     document
       .getElementById("registerBtn")
       .addEventListener("click", async () => {
@@ -93,11 +86,9 @@ export function Register() {
         const email = document.getElementById("registerEmail").value.trim();
         const password = passwordInput.value;
         const confirmPassword = confirmInput.value;
-        const remember = document.getElementById("rememberMe").checked;
 
         msgBox.innerHTML = "";
 
-        // Validate inputs
         if (!full_name || !email || !password || !confirmPassword) {
           msgBox.innerHTML = `<span class="text-red-600">❌ Please fill all fields.</span>`;
           return;
@@ -110,28 +101,38 @@ export function Register() {
 
         msgBox.innerHTML = "Registering...";
 
-        // Submit registration data
         try {
-          const res = await fetch(`${API_BASE_URL}/api/register`, {
+          const response = await fetch(`${API_BASE_URL}/api/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ full_name, email, password, remember }),
+            body: JSON.stringify({ full_name, email, password }),
           });
 
-          const result = await res.json();
+          const contentType = response.headers.get("Content-Type");
 
-          if (res.ok) {
-            msgBox.innerHTML = `<span class='text-green-600'>🎉 Successfully registered! You can now <a href="/login" data-link class="underline text-blue-600">login here</a>.</span>`;
-            document.getElementById("registerName").value = "";
-            document.getElementById("registerEmail").value = "";
-            passwordInput.value = "";
-            confirmInput.value = "";
-            document.getElementById("rememberMe").checked = false;
+          // 👇 Confirm response is JSON before parsing
+          if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (response.ok) {
+              msgBox.innerHTML = `<span class='text-green-600'>🎉 Registered! <a href="/login" data-link class="text-blue-600 underline">Login</a>.</span>`;
+              document.getElementById("registerName").value = "";
+              document.getElementById("registerEmail").value = "";
+              passwordInput.value = "";
+              confirmInput.value = "";
+              document.getElementById("rememberMe").checked = false;
+            } else {
+              msgBox.innerHTML = `<span class='text-red-600'>❌ ${
+                data.error || "Registration failed."
+              }</span>`;
+              console.error("❌ Server error:", data);
+            }
           } else {
-            msgBox.innerHTML = `<span class='text-red-600'>❌ ${result.error}</span>`;
+            msgBox.innerHTML = `<span class='text-red-600'>❌ Unexpected response from server. Not JSON.</span>`;
+            console.error("❌ Non-JSON response from /api/register");
           }
         } catch (err) {
-          msgBox.innerHTML = `<span class='text-red-600'>❌ Error: ${err.message}</span>`;
+          msgBox.innerHTML = `<span class='text-red-600'>❌ ${err.message}</span>`;
+          console.error("❌ Registration error:", err);
         }
       });
   }, 100);
