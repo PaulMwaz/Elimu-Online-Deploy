@@ -1,21 +1,28 @@
 # ----------------------------------------
-# 🔧 Flask and Extensions
+# 🔧 Core Flask Framework
 # ----------------------------------------
-Flask                    # Web framework
-Flask-SQLAlchemy         # ORM integration
-Flask-Cors               # Cross-Origin Resource Sharing support
+Flask               # Web framework for building the backend
+Flask-SQLAlchemy    # ORM integration with SQLAlchemy
+Flask-Cors          # Handles Cross-Origin Resource Sharing
+Flask-Migrate       # Manages database migrations
 
 # ----------------------------------------
-# 🔐 Environment Configuration
+# 🗃️ Database & ORM
 # ----------------------------------------
-python-dotenv            # Load environment variables from .env files
+SQLAlchemy          # SQL toolkit and ORM used by Flask-SQLAlchemy
+alembic             # Handles schema migrations with Flask-Migrate
 
 # ----------------------------------------
 # ☁️ Google Cloud Integration
 # ----------------------------------------
-google-cloud-storage     # GCS client library for file uploads
+google-cloud-storage  # Library for interacting with Google Cloud Storage
 
 # ----------------------------------------
-# 🔐 Security & Utilities
+# 🔐 Environment Variable Management
 # ----------------------------------------
-Werkzeug                 # Password hashing & utilities
+python-dotenv       # Loads environment variables from .env files
+
+# ----------------------------------------
+# 🚀 Production WSGI Server
+# ----------------------------------------
+gunicorn            # Recommended WSGI server for running Flask in production
