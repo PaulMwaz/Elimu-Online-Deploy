@@ -30,14 +30,10 @@ def create_app():
     # 🌐 Configure CORS
     # =====================================
     allowed_origins = [
-        "http://localhost:5173",                     # Local dev
-        "https://elimu-online.onrender.com"          # Render production frontend
+        "http://localhost:5173",
+        "https://elimu-online.onrender.com"
     ]
-
-    CORS(app,
-         resources={r"/api/*": {"origins": allowed_origins}},
-         supports_credentials=True)
-
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}}, supports_credentials=True)
     print(f"✅ CORS enabled for: {allowed_origins}", flush=True)
 
     # =====================================
@@ -50,6 +46,21 @@ def create_app():
     print("🗃️ DATABASE_URL:", app.config.get("SQLALCHEMY_DATABASE_URI", "Not Set"), flush=True)
 
     # =====================================
+    # ☁️ Write GCS key from env to file (Render safe)
+    # =====================================
+    gcs_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    if gcs_json:
+        try:
+            with open("/tmp/gcs-key.json", "w") as f:
+                f.write(gcs_json.replace("\\n", "\n"))
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/tmp/gcs-key.json"
+            print("✅ GCS key written to /tmp/gcs-key.json", flush=True)
+        except Exception as e:
+            print("❌ Failed to write GCS key:", e, flush=True)
+    else:
+        print("⚠️ GOOGLE_APPLICATION_CREDENTIALS_JSON not set!", flush=True)
+
+    # =====================================
     # 🔗 Initialize DB and Migration
     # =====================================
     db.init_app(app)
@@ -57,7 +68,7 @@ def create_app():
     print("✅ SQLAlchemy and Flask-Migrate initialized", flush=True)
 
     # =====================================
-    # 🔌 Register Blueprints (APIs)
+    # 🔌 Register Blueprints
     # =====================================
     from .routes.auth_routes import auth_routes
     from .routes.resource_routes import resource_routes
