@@ -18,35 +18,43 @@ db = SQLAlchemy()
 migrate = Migrate()
 
 def create_app():
-    # Initialize Flask app with instance folder support
+    # ✅ Initialize Flask app
     app = Flask(
         __name__,
         instance_path=os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'instance'),
         instance_relative_config=True,
     )
-    print("✅ Flask app initialized.")
+    print("✅ Flask app initialized.", flush=True)
 
     # =====================================
     # 🌐 Configure CORS
     # =====================================
+    allowed_origins = [
+        "http://localhost:5173",                     # Local dev
+        "https://elimu-online.onrender.com"          # Render production frontend
+    ]
+
     CORS(app,
-         resources={r"/api/*": {"origins": ["http://localhost:5173"]}},
+         resources={r"/api/*": {"origins": allowed_origins}},
          supports_credentials=True)
-    print("✅ CORS enabled for http://localhost:5173")
+
+    print(f"✅ CORS enabled for: {allowed_origins}", flush=True)
 
     # =====================================
     # ⚙️ Load Configuration
     # =====================================
     from .config import Config
     app.config.from_object(Config)
-    print("✅ Configuration loaded from config.py")
+    print("✅ Configuration loaded from config.py", flush=True)
+    print("🔐 SECRET_KEY:", app.config.get("SECRET_KEY", "Not Set"), flush=True)
+    print("🗃️ DATABASE_URL:", app.config.get("SQLALCHEMY_DATABASE_URI", "Not Set"), flush=True)
 
     # =====================================
     # 🔗 Initialize DB and Migration
     # =====================================
     db.init_app(app)
     migrate.init_app(app, db)
-    print("✅ SQLAlchemy and Flask-Migrate initialized")
+    print("✅ SQLAlchemy and Flask-Migrate initialized", flush=True)
 
     # =====================================
     # 🔌 Register Blueprints (APIs)
@@ -64,16 +72,16 @@ def create_app():
     app.register_blueprint(test_routes)
     app.register_blueprint(file_routes)
     app.register_blueprint(password_routes)
-    print("✅ All API blueprints registered")
+    print("✅ All API blueprints registered", flush=True)
 
     # =====================================
     # 🔥 Global error handler
     # =====================================
     @app.errorhandler(Exception)
     def handle_error(e):
-        print("🔥 Global error:", str(e))
+        print("🔥 Global error:", str(e), flush=True)
         traceback.print_exc()
-        return {"error": str(e)}, 500
+        return {"error": "An internal server error occurred", "details": str(e)}, 500
 
     # =====================================
     # 🛠 Auto-create tables in development
@@ -81,6 +89,6 @@ def create_app():
     if app.config.get("ENV") == "development":
         with app.app_context():
             db.create_all()
-            print("🛠️ Development mode: Auto-created DB tables (if not exist)")
+            print("🛠️ Development mode: Auto-created DB tables", flush=True)
 
     return app
