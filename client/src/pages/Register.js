@@ -99,7 +99,7 @@ export function Register() {
           return;
         }
 
-        msgBox.innerHTML = "Registering...";
+        msgBox.innerHTML = `<span class="text-gray-600">⏳ Registering...</span>`;
 
         try {
           const response = await fetch(`${API_BASE_URL}/api/register`, {
@@ -109,12 +109,14 @@ export function Register() {
           });
 
           const contentType = response.headers.get("Content-Type");
+          console.log("📩 Server responded with Content-Type:", contentType);
 
-          // 👇 Confirm response is JSON before parsing
           if (contentType && contentType.includes("application/json")) {
             const data = await response.json();
+            console.log("📦 JSON response from server:", data);
+
             if (response.ok) {
-              msgBox.innerHTML = `<span class='text-green-600'>🎉 Registered! <a href="/login" data-link class="text-blue-600 underline">Login</a>.</span>`;
+              msgBox.innerHTML = `<span class='text-green-600'>🎉 Registration successful! <a href="/login" data-link class="text-blue-600 underline">Login</a>.</span>`;
               document.getElementById("registerName").value = "";
               document.getElementById("registerEmail").value = "";
               passwordInput.value = "";
@@ -124,15 +126,16 @@ export function Register() {
               msgBox.innerHTML = `<span class='text-red-600'>❌ ${
                 data.error || "Registration failed."
               }</span>`;
-              console.error("❌ Server error:", data);
+              console.error("❌ Registration error from server:", data);
             }
           } else {
             msgBox.innerHTML = `<span class='text-red-600'>❌ Unexpected response from server. Not JSON.</span>`;
-            console.error("❌ Non-JSON response from /api/register");
+            const text = await response.text();
+            console.error("❌ Raw response:", text);
           }
         } catch (err) {
           msgBox.innerHTML = `<span class='text-red-600'>❌ ${err.message}</span>`;
-          console.error("❌ Registration error:", err);
+          console.error("🔥 Registration request failed:", err);
         }
       });
   }, 100);
