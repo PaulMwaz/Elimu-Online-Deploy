@@ -1,14 +1,14 @@
 // 📁 src/components/FileCard.js
-// 📦 Renders a file card with actions like View, Download, and Admin options (Rename/Delete)
+// 📦 Renders a file card with View/Download (user) and Rename/Delete (admin) actions
 
 export function FileCard(file) {
   const card = document.createElement("div");
 
-  // 📦 Container styling for each file card
+  // 🧱 Card container styling
   card.className =
     "flex flex-col md:flex-row md:items-center justify-between p-3 bg-gray-100 rounded-lg shadow-sm hover:shadow-md transition";
 
-  // 📝 File info section (filename as a clickable link)
+  // 📝 File metadata section
   const fileInfo = document.createElement("div");
   fileInfo.className = "mb-2 md:mb-0";
   fileInfo.innerHTML = `
@@ -17,11 +17,11 @@ export function FileCard(file) {
     </a>
   `;
 
-  // 🔘 Action buttons container
+  // 🔘 Actions container
   const actions = document.createElement("div");
   actions.className = "flex gap-2 flex-wrap justify-end";
 
-  // 🔍 View button
+  // 👁️ View button
   const viewBtn = document.createElement("a");
   viewBtn.href = file.file_url;
   viewBtn.target = "_blank";
@@ -39,11 +39,11 @@ export function FileCard(file) {
 
   actions.append(viewBtn, downloadBtn);
 
-  // 🔐 Show admin controls (Rename/Delete) only if admin token is available
+  // 🔐 Admin-only controls
   const isAdmin = !!localStorage.getItem("adminToken");
 
   if (isAdmin) {
-    // ✏️ Rename Button
+    // ✏️ Rename button
     const renameBtn = document.createElement("button");
     renameBtn.className =
       "px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 text-sm";
@@ -58,9 +58,10 @@ export function FileCard(file) {
         location.hostname === "localhost" || location.hostname === "127.0.0.1";
       const API_BASE_URL = isLocal
         ? "http://localhost:5555"
-        : "https://elimu-online.onrender.com";
+        : "https://elimu-online-backend.onrender.com";
 
       try {
+        console.log("🔁 Renaming file:", file.id, "→", newName);
         const res = await fetch(`${API_BASE_URL}/api/admin/rename`, {
           method: "PATCH",
           headers: {
@@ -70,19 +71,20 @@ export function FileCard(file) {
           body: JSON.stringify({ id: file.id, newName }),
         });
 
+        const result = await res.json();
         if (res.ok) {
           alert("✅ File renamed successfully!");
           window.location.reload();
         } else {
-          const err = await res.json();
-          alert(`❌ Rename failed: ${err.error || "Unknown error"}`);
+          alert(`❌ Rename failed: ${result.error || "Unknown error"}`);
         }
       } catch (err) {
+        console.error("🔥 Rename error:", err);
         alert("❌ Server error during rename.");
       }
     });
 
-    // 🗑️ Delete Button
+    // 🗑️ Delete button
     const deleteBtn = document.createElement("button");
     deleteBtn.className =
       "px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm";
@@ -99,9 +101,10 @@ export function FileCard(file) {
         location.hostname === "localhost" || location.hostname === "127.0.0.1";
       const API_BASE_URL = isLocal
         ? "http://localhost:5555"
-        : "https://elimu-online.onrender.com";
+        : "https://elimu-online-backend.onrender.com";
 
       try {
+        console.log("🗑️ Deleting file:", file.id);
         const res = await fetch(`${API_BASE_URL}/api/admin/delete/${file.id}`, {
           method: "DELETE",
           headers: {
@@ -109,14 +112,15 @@ export function FileCard(file) {
           },
         });
 
+        const result = await res.json();
         if (res.ok) {
           alert("✅ File deleted successfully!");
           window.location.reload();
         } else {
-          const err = await res.json();
-          alert(`❌ Delete failed: ${err.error || "Unknown error"}`);
+          alert(`❌ Delete failed: ${result.error || "Unknown error"}`);
         }
       } catch (err) {
+        console.error("🔥 Delete error:", err);
         alert("❌ Server error during delete.");
       }
     });
@@ -124,7 +128,7 @@ export function FileCard(file) {
     actions.append(renameBtn, deleteBtn);
   }
 
-  // 🧩 Combine info and actions into the card
+  // 🧩 Assemble the card
   card.append(fileInfo, actions);
   return card;
 }

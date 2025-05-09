@@ -12,7 +12,8 @@ resource_routes = Blueprint("resource_routes", __name__)
 # ✅ Endpoint to filter and return resources
 @resource_routes.route("/api/resources", methods=["GET"])
 def get_filtered_resources():
-    print("📩 Incoming request to /api/resources")
+    print("📩 Incoming request to /api/resources", flush=True)
+
     try:
         subject = request.args.get("subject")
         form_class = request.args.get("formClass")
@@ -20,12 +21,12 @@ def get_filtered_resources():
         term = request.args.get("term")
         category = request.args.get("category")
 
-        print(f"🔎 Filters received: subject={subject}, form_class={form_class}, level={level}, term={term}, category={category}")
+        print(f"🔎 Filters received → subject={subject}, formClass={form_class}, level={level}, term={term}, category={category}", flush=True)
 
-        # Build the base query
+        # ✅ Build base query
         query = Resource.query
 
-        # ✅ Apply filters
+        # ✅ Apply filters only if provided
         if subject:
             query = query.filter(Resource.subject == subject)
         if form_class:
@@ -37,15 +38,15 @@ def get_filtered_resources():
         if category:
             category_obj = Category.query.filter(func.lower(Category.name) == category.lower()).first()
             if category_obj:
+                print(f"✅ Category matched: {category_obj.name} (ID: {category_obj.id})", flush=True)
                 query = query.filter(Resource.category_id == category_obj.id)
-                print(f"✅ Matched category: {category_obj.name} (ID: {category_obj.id})")
             else:
-                print("⚠️ No matching category found. Returning empty list.")
+                print("⚠️ No matching category found. Returning empty response.", flush=True)
                 return jsonify({"resources": [], "count": 0}), 200
 
-        # Fetch and serialize results
+        # ✅ Execute query and serialize results
         resources = query.all()
-        print(f"✅ {len(resources)} resource(s) found.")
+        print(f"✅ {len(resources)} resource(s) found.", flush=True)
 
         data = [{
             "id": r.id,
@@ -65,7 +66,7 @@ def get_filtered_resources():
         }), 200
 
     except Exception as e:
-        print("🔥 Exception occurred while fetching resources:")
+        print("🔥 Error fetching resources:", str(e), flush=True)
         traceback.print_exc()
         return jsonify({
             "error": "Failed to fetch resources",
