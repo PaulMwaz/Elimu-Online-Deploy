@@ -7,12 +7,9 @@ export function Login() {
   const user = JSON.parse(localStorage.getItem("user"));
   const isLoggedIn = user && user.full_name;
 
-  const isLocal =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
-  const API_BASE_URL = isLocal
-    ? "http://localhost:5555"
-    : "https://elimu-online.onrender.com";
+  // ✅ Use environment variable for API base URL
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  console.log("🔗 API_BASE_URL:", API_BASE_URL);
 
   section.innerHTML = `
     <div class="bg-white bg-opacity-90 backdrop-blur-md p-6 md:p-8 rounded shadow-lg w-full max-w-[380px] md:max-w-[420px]">
@@ -82,7 +79,7 @@ export function Login() {
       loginBtn.addEventListener("click", async () => {
         const email = document.getElementById("loginEmail").value.trim();
         const password = document.getElementById("loginPassword").value.trim();
-        msgBox.innerHTML = "Logging in...";
+        msgBox.innerHTML = `<span class="text-gray-600">⏳ Logging in...</span>`;
 
         if (!email || !password) {
           msgBox.innerHTML = `<span class="text-red-600">❌ Please enter both email and password.</span>`;
@@ -97,9 +94,11 @@ export function Login() {
           });
 
           const contentType = response.headers.get("Content-Type");
+          console.log("📩 Server responded with Content-Type:", contentType);
 
           if (contentType && contentType.includes("application/json")) {
             const result = await response.json();
+            console.log("📦 Login JSON response:", result);
 
             if (response.ok && result.token) {
               localStorage.setItem("user", JSON.stringify(result.user));
@@ -119,15 +118,16 @@ export function Login() {
               msgBox.innerHTML = `<span class='text-red-600'>❌ ${
                 result.error || "Login failed"
               }</span>`;
-              console.error("❌ Login failed response:", result);
+              console.error("❌ Login error from server:", result);
             }
           } else {
-            msgBox.innerHTML = `<span class='text-red-600'>❌ Unexpected server response. Please try again.</span>`;
-            console.error("❌ Server did not return JSON.");
+            msgBox.innerHTML = `<span class='text-red-600'>❌ Unexpected server response. Not JSON.</span>`;
+            const rawText = await response.text();
+            console.error("❌ Raw server response:", rawText);
           }
         } catch (error) {
           msgBox.innerHTML = `<span class='text-red-600'>❌ Network error: ${error.message}</span>`;
-          console.error("❌ Login request failed:", error);
+          console.error("🔥 Login request failed:", error);
         }
       });
     }

@@ -10,21 +10,21 @@ class Config:
     # 🔐 Secret key for JWTs and Flask sessions
     SECRET_KEY = os.getenv("SECRET_KEY", "default_fallback_key")
     if SECRET_KEY == "default_fallback_key":
-        print("⚠️ WARNING: Using fallback SECRET_KEY", flush=True)
+        print("⚠️ WARNING: Using fallback SECRET_KEY (this is insecure for production)", flush=True)
     else:
         print("✅ SECRET_KEY loaded", flush=True)
 
-    # 🗃️ Database (PostgreSQL for production, SQLite fallback for local/dev)
+    # 🗃️ SQLAlchemy DB URI (PostgreSQL preferred)
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///../instance/elimu.db")
     if "postgresql" in SQLALCHEMY_DATABASE_URI:
         print("✅ PostgreSQL DB configured", flush=True)
     else:
-        print("⚠️ Using fallback SQLite DB", flush=True)
+        print("⚠️ Using fallback SQLite DB — check DATABASE_URL in Render settings", flush=True)
 
-    # 🔁 Performance tweak: avoid unnecessary change tracking
+    # 🔁 Disable modification tracking for performance
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # ☁️ Google Cloud Storage configuration
+    # ☁️ Google Cloud Storage Configuration
     GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
     if not GCS_BUCKET_NAME:
         print("❌ GCS_BUCKET_NAME is missing!", flush=True)
@@ -33,11 +33,11 @@ class Config:
 
     GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if not GOOGLE_APPLICATION_CREDENTIALS:
-        print("❌ GOOGLE_APPLICATION_CREDENTIALS path missing!", flush=True)
+        print("❌ GOOGLE_APPLICATION_CREDENTIALS path is missing!", flush=True)
     else:
         print(f"✅ GCS credentials file: {GOOGLE_APPLICATION_CREDENTIALS}", flush=True)
 
-    # 📧 SMTP email settings
+    # 📧 SMTP Email Configuration
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
@@ -48,8 +48,8 @@ class Config:
     if MAIL_USERNAME and MAIL_PASSWORD:
         print(f"✅ Email configured: {MAIL_USERNAME}", flush=True)
     else:
-        print("❌ Email username/password missing!", flush=True)
+        print("❌ Email username or password is missing!", flush=True)
 
-    # 🌐 Frontend URL used in email links or redirects
+    # 🌐 Frontend URL for links (e.g., password reset)
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
     print(f"🌐 FRONTEND_URL set to: {FRONTEND_URL}", flush=True)

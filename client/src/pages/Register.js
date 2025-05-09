@@ -4,12 +4,9 @@ export function Register() {
     "min-h-screen bg-cover bg-center flex items-center justify-center px-4 py-24";
   section.style.backgroundImage = "url('/images/register-bg.jpg')";
 
-  const isLocal =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
-  const API_BASE_URL = isLocal
-    ? "http://localhost:5555"
-    : "https://elimu-online.onrender.com";
+  // ✅ Use Vite environment variable
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  console.log("🔗 API_BASE_URL:", API_BASE_URL);
 
   section.innerHTML = `
     <div class="bg-white bg-opacity-90 backdrop-blur-md p-6 md:p-8 rounded shadow-lg w-full max-w-[380px] md:max-w-[420px]">
@@ -126,16 +123,16 @@ export function Register() {
               msgBox.innerHTML = `<span class='text-red-600'>❌ ${
                 data.error || "Registration failed."
               }</span>`;
-              console.error("❌ Registration error from server:", data);
+              console.error("❌ Server-side error:", data);
             }
           } else {
-            msgBox.innerHTML = `<span class='text-red-600'>❌ Unexpected response from server. Not JSON.</span>`;
-            const text = await response.text();
-            console.error("❌ Raw response:", text);
+            msgBox.innerHTML = `<span class='text-red-600'>❌ Unexpected server response. Not JSON.</span>`;
+            const rawText = await response.text();
+            console.error("❌ Non-JSON response text:", rawText);
           }
         } catch (err) {
           msgBox.innerHTML = `<span class='text-red-600'>❌ ${err.message}</span>`;
-          console.error("🔥 Registration request failed:", err);
+          console.error("🔥 Network or parsing error:", err);
         }
       });
   }, 100);
