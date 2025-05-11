@@ -1,10 +1,11 @@
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 from ..models.resource import Resource
 from ..models.category import Category
 from ..models.user import User
 from .. import db
 from ..utils.auth_utils import verify_token
+from ..utils.gcs_helper import upload_to_gcs
 from google.cloud import storage
 from google.api_core.exceptions import NotFound
 import os
@@ -15,11 +16,6 @@ admin_routes = Blueprint("admin_routes", __name__)
 
 BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "elimu-online-resources")
 SECRET_KEY = os.getenv("SECRET_KEY", "elimu-secret-dev-key")
-
-def get_bucket():
-    print("🔁 Connecting to Google Cloud Storage...")
-    client = storage.Client()
-    return client.bucket(BUCKET_NAME)
 
 # ✅ Admin Login
 @admin_routes.route("/api/admin/login", methods=["POST", "OPTIONS"])
@@ -71,14 +67,13 @@ def admin_login():
         print(f"🔥 Admin login error: {str(e)}")
         return jsonify({"error": "Admin login server error."}), 500
 
-# ✅ Upload
+# ✅ Upload File
 @admin_routes.route("/api/admin/upload", methods=["POST"])
 def admin_upload_file():
     try:
         token = request.headers.get("Authorization", "").replace("Bearer ", "")
         user = verify_token(token)
         if not user or not user.get("is_admin"):
-            print("🚫 Unauthorized upload attempt")
             return jsonify({"error": "Admin access required"}), 403
 
         level = request.form.get("level")
@@ -89,7 +84,7 @@ def admin_upload_file():
         term = request.form.get("term") or "General"
         file = request.files.get("file")
 
-        print(f"📤 Upload requested with metadata: {subject}, {level}, {form_class}, {term}, {category_name}, price: {price}")
+        print(f"📤 Upload requested: {subject}, {level}, {form_class}, {term}, {category_name}, price={price}")
 
         if not all([level, category_name, form_class, subject, file]):
             return jsonify({"error": "Missing required fields."}), 400
@@ -101,21 +96,18 @@ def admin_upload_file():
 
         category = Category.query.filter_by(name=category_name).first()
         if not category:
-            print(f"📁 Creating new category: {category_name}")
             category = Category(name=category_name)
             db.session.add(category)
             db.session.commit()
 
         filename = secure_filename(file.filename)
         blob_path = f"{category_name}/{level}/{form_class}/{subject}/{term}/{filename}"
-        print(f"📁 Saving to GCS: {blob_path}")
 
-        bucket = get_bucket()
-        blob = bucket.blob(blob_path)
-        blob.upload_from_file(file.stream, content_type=file.content_type)
-
-        file_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{blob_path}"
-        print(f"✅ File uploaded to: {file_url}")
+        try:
+            file_url = upload_to_gcs(BUCKET_NAME, file, blob_path)
+            print(f"✅ File uploaded to GCS: {file_url}")
+        except Exception as upload_error:
+            return jsonify({"error": "Upload failed", "details": str(upload_error)}), 500
 
         resource = Resource(
             filename=filename,
@@ -129,7 +121,6 @@ def admin_upload_file():
         )
         db.session.add(resource)
         db.session.commit()
-        print("✅ File metadata saved to DB")
 
         return jsonify({"message": "File uploaded successfully.", "file_url": file_url}), 201
 
@@ -137,7 +128,7 @@ def admin_upload_file():
         print(f"🔥 Upload error: {str(e)}")
         return jsonify({"error": "Failed to upload file", "details": str(e)}), 500
 
-# ✅ List All Files
+# ✅ List Uploaded Files
 @admin_routes.route("/api/admin/files", methods=["GET", "OPTIONS"])
 def list_uploaded_files():
     if request.method == "OPTIONS":
@@ -153,7 +144,7 @@ def list_uploaded_files():
             return jsonify({"error": "Admin access required"}), 403
 
         resources = Resource.query.all()
-        print(f"📋 Listing {len(resources)} uploaded files")
+        print(f"📋 Listing {len(resources)} files")
 
         files = [{
             "id": res.id,
@@ -186,8 +177,6 @@ def rename_uploaded_file():
         resource_id = data.get("id")
         new_name = data.get("newName")
 
-        print(f"✏️ Rename requested: ID={resource_id}, new name={new_name}")
-
         if not resource_id or not new_name:
             return jsonify({"error": "Missing id or newName"}), 400
 
@@ -195,14 +184,15 @@ def rename_uploaded_file():
         if not resource:
             return jsonify({"error": "Resource not found"}), 404
 
-        bucket = get_bucket()
         old_blob_path = resource.file_url.replace(f"https://storage.googleapis.com/{BUCKET_NAME}/", "")
-        old_blob = bucket.blob(old_blob_path)
-        if not old_blob.exists():
-            return jsonify({"error": "Original file not found on GCS"}), 404
-
         new_blob_path = "/".join(old_blob_path.split("/")[:-1]) + f"/{secure_filename(new_name)}"
+
+        bucket = storage.Client().bucket(BUCKET_NAME)
+        old_blob = bucket.blob(old_blob_path)
         new_blob = bucket.blob(new_blob_path)
+
+        if not old_blob.exists():
+            return jsonify({"error": "Original file not found"}), 404
 
         bucket.copy_blob(old_blob, bucket, new_blob_path)
         old_blob.delete()
@@ -212,7 +202,6 @@ def rename_uploaded_file():
         resource.file_url = new_file_url
         db.session.commit()
 
-        print(f"✅ File renamed successfully: {new_file_url}")
         return jsonify({"message": "File renamed successfully.", "file_url": new_file_url}), 200
 
     except Exception as e:
@@ -239,7 +228,7 @@ def delete_uploaded_file(resource_id):
             return jsonify({"error": "File not found"}), 404
 
         blob_path = resource.file_url.replace(f"https://storage.googleapis.com/{BUCKET_NAME}/", "")
-        bucket = get_bucket()
+        bucket = storage.Client().bucket(BUCKET_NAME)
         blob = bucket.blob(blob_path)
 
         if blob.exists():
@@ -247,7 +236,6 @@ def delete_uploaded_file(resource_id):
 
         db.session.delete(resource)
         db.session.commit()
-        print(f"🗑️ File deleted: {resource.filename}")
 
         return jsonify({"message": "File deleted successfully."}), 200
 

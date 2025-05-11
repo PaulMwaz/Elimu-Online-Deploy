@@ -1,51 +1,72 @@
 # 📁 sync_gcs_to_db.py
-# Synchronizes files stored in Google Cloud Storage with the local database
+# ✅ Synchronizes files from GCS with the 'resources' table in PostgreSQL
 
 from google.cloud import storage
 from app import create_app, db
 from app.models.resource import Resource
+from app.models.category import Category
+import os
+
+# 🔧 Configuration
+BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "elimu-online-resources")
 
 # ✅ Initialize Flask app context
 app = create_app()
-BUCKET_NAME = "elimu-online-resources"
 
-with app.app_context():
-    try:
-        client = storage.Client()
-        bucket = client.bucket(BUCKET_NAME)
-        blobs = bucket.list_blobs()
+def sync_from_gcs():
+    with app.app_context():
+        try:
+            client = storage.Client()
+            bucket = client.bucket(BUCKET_NAME)
+            blobs = bucket.list_blobs()
 
-        for blob in blobs:
-            path = blob.name
-            parts = path.split("/")
+            synced = 0
+            skipped = 0
 
-            # ✅ Skip blobs that don't match expected path structure
-            if len(parts) != 6:
-                continue
+            for blob in blobs:
+                path = blob.name
+                parts = path.split("/")  # expected: category/level/form/subject/term/filename
 
-            category, level, form_class, subject, term, filename = parts
+                if len(parts) != 6:
+                    print(f"⚠️ Skipping malformed path: {path}")
+                    continue
 
-            # ✅ Avoid inserting duplicate entries
-            if Resource.query.filter_by(filename=filename).first():
-                continue
+                category_name, level, form_class, subject, term, filename = parts
 
-            file_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{path}"
+                # ✅ Skip duplicates
+                file_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{path}"
+                if Resource.query.filter_by(filename=filename, file_url=file_url).first():
+                    skipped += 1
+                    continue
 
-            # ✅ Insert new resource into DB
-            new_resource = Resource(
-                filename=filename,
-                subject=subject,
-                class_form=form_class,
-                level=level,
-                category_id=1,  # ⚠️ Default value; update later to resolve correct category ID
-                term=term,
-                price=0,
-                file_url=file_url
-            )
-            db.session.add(new_resource)
+                # ✅ Get or create category
+                category = Category.query.filter_by(name=category_name.lower()).first()
+                if not category:
+                    category = Category(name=category_name.lower())
+                    db.session.add(category)
+                    db.session.commit()
 
-        # ✅ Commit all additions
-        db.session.commit()
+                # ✅ Add resource entry
+                new_resource = Resource(
+                    filename=filename,
+                    subject=subject.title(),
+                    class_form=form_class.upper(),
+                    level=level.lower(),
+                    term=term.title(),
+                    category_id=category.id,
+                    price=0,
+                    file_url=file_url
+                )
 
-    except Exception:
-        pass  # ⚠️ Suppress all errors silently; add logging if needed in production
+                db.session.add(new_resource)
+                synced += 1
+
+            db.session.commit()
+            print(f"✅ Synced {synced} files. Skipped {skipped} duplicates.")
+
+        except Exception as e:
+            print(f"🔥 Error during sync: {e}")
+
+# 🚀 Run it
+if __name__ == "__main__":
+    sync_from_gcs()
