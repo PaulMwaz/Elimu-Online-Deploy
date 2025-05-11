@@ -1,12 +1,14 @@
 # 📁 server/app/utils/gcs_helper.py
 
 import os
+import json
 from google.cloud import storage
 from google.auth.exceptions import DefaultCredentialsError
+from google.oauth2 import service_account
 
 def upload_to_gcs(bucket_name, file_obj, destination_blob_name):
     """
-    Uploads a file object to Google Cloud Storage.
+    Uploads a file object to Google Cloud Storage using credentials from an env variable.
 
     Args:
         bucket_name (str): The GCS bucket name.
@@ -17,11 +19,14 @@ def upload_to_gcs(bucket_name, file_obj, destination_blob_name):
         str: Public file URL.
     """
     try:
-        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        if not credentials_path or not os.path.exists(credentials_path):
-            raise FileNotFoundError("JSON key file not found at path set in GOOGLE_APPLICATION_CREDENTIALS.")
+        raw_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+        if not raw_json:
+            raise RuntimeError("Missing GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable.")
 
-        client = storage.Client.from_service_account_json(credentials_path)
+        credentials_info = json.loads(raw_json)
+        credentials = service_account.Credentials.from_service_account_info(credentials_info)
+
+        client = storage.Client(credentials=credentials)
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
 
@@ -34,8 +39,8 @@ def upload_to_gcs(bucket_name, file_obj, destination_blob_name):
 
         return f"https://storage.googleapis.com/{bucket_name}/{destination_blob_name}"
 
-    except FileNotFoundError as fnf:
-        raise RuntimeError(f"GCS credentials error: {fnf}")
+    except json.JSONDecodeError:
+        raise RuntimeError("Invalid JSON in GOOGLE_APPLICATION_CREDENTIALS_JSON.")
     except DefaultCredentialsError as cred_err:
         raise RuntimeError(f"GCS default credentials error: {cred_err}")
     except Exception as e:
