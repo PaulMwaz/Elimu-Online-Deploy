@@ -2,6 +2,8 @@
 // 📦 Renders a file card with View/Download (user) and Rename/Delete (admin) actions
 
 export function FileCard(file) {
+  console.log("🧾 Rendering file card:", file);
+
   const card = document.createElement("div");
 
   // 🧱 Card container styling
@@ -15,6 +17,7 @@ export function FileCard(file) {
     <a href="${file.file_url}" target="_blank" class="font-semibold text-blue-600 hover:underline truncate max-w-xs block">
       ${file.filename}
     </a>
+    <p class="text-xs text-gray-600">Subject: ${file.subject} | Term: ${file.term}</p>
   `;
 
   // 🔘 Actions container
@@ -43,6 +46,8 @@ export function FileCard(file) {
   const isAdmin = !!localStorage.getItem("adminToken");
 
   if (isAdmin) {
+    console.log("🔐 Admin detected: showing Rename/Delete buttons");
+
     // ✏️ Rename button
     const renameBtn = document.createElement("button");
     renameBtn.className =
@@ -72,6 +77,8 @@ export function FileCard(file) {
         });
 
         const result = await res.json();
+        console.log("📡 Rename response:", result);
+
         if (res.ok) {
           alert("✅ File renamed successfully!");
           window.location.reload();
@@ -113,6 +120,8 @@ export function FileCard(file) {
         });
 
         const result = await res.json();
+        console.log("📡 Delete response:", result);
+
         if (res.ok) {
           alert("✅ File deleted successfully!");
           window.location.reload();

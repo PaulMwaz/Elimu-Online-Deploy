@@ -11,24 +11,22 @@ import os
 import jwt
 from datetime import datetime, timedelta
 
-# ✅ Create Blueprint for admin routes
 admin_routes = Blueprint("admin_routes", __name__)
 
-# ✅ Environment configuration
 BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "elimu-online-resources")
 SECRET_KEY = os.getenv("SECRET_KEY", "elimu-secret-dev-key")
 
-# ✅ Helper function to access Google Cloud Storage bucket
 def get_bucket():
+    print("🔁 Connecting to Google Cloud Storage...")
     client = storage.Client()
     return client.bucket(BUCKET_NAME)
 
-# ✅ Admin Login Route
+# ✅ Admin Login
 @admin_routes.route("/api/admin/login", methods=["POST", "OPTIONS"])
 def admin_login():
     if request.method == "OPTIONS":
         response = jsonify({"message": "CORS preflight for admin login"})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Origin", "*")
         response.headers.add("Access-Control-Allow-Credentials", "true")
         response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
         response.headers.add("Access-Control-Allow-Methods", "POST,OPTIONS")
@@ -38,6 +36,8 @@ def admin_login():
         data = request.get_json()
         email = data.get("email")
         password = data.get("password")
+
+        print(f"🔐 Admin login attempt for {email}")
 
         if not email or not password:
             return jsonify({"error": "Missing email or password."}), 400
@@ -53,7 +53,8 @@ def admin_login():
                 "exp": datetime.utcnow() + timedelta(days=1)
             }, SECRET_KEY, algorithm="HS256")
 
-            response = jsonify({
+            print("✅ Admin login successful.")
+            return jsonify({
                 "message": "Admin login successful",
                 "token": token,
                 "admin": {
@@ -61,23 +62,23 @@ def admin_login():
                     "full_name": user.full_name,
                     "is_admin": True
                 }
-            })
-            response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
-            response.headers.add("Access-Control-Allow-Credentials", "true")
-            return response, 200
+            }), 200
 
+        print("❌ Invalid admin credentials.")
         return jsonify({"error": "Invalid admin login credentials."}), 401
 
     except Exception as e:
+        print(f"🔥 Admin login error: {str(e)}")
         return jsonify({"error": "Admin login server error."}), 500
 
-# ✅ Admin Upload File Route
+# ✅ Upload
 @admin_routes.route("/api/admin/upload", methods=["POST"])
 def admin_upload_file():
     try:
         token = request.headers.get("Authorization", "").replace("Bearer ", "")
         user = verify_token(token)
         if not user or not user.get("is_admin"):
+            print("🚫 Unauthorized upload attempt")
             return jsonify({"error": "Admin access required"}), 403
 
         level = request.form.get("level")
@@ -87,6 +88,8 @@ def admin_upload_file():
         price = request.form.get("price", 0)
         term = request.form.get("term") or "General"
         file = request.files.get("file")
+
+        print(f"📤 Upload requested with metadata: {subject}, {level}, {form_class}, {term}, {category_name}, price: {price}")
 
         if not all([level, category_name, form_class, subject, file]):
             return jsonify({"error": "Missing required fields."}), 400
@@ -98,18 +101,21 @@ def admin_upload_file():
 
         category = Category.query.filter_by(name=category_name).first()
         if not category:
+            print(f"📁 Creating new category: {category_name}")
             category = Category(name=category_name)
             db.session.add(category)
             db.session.commit()
 
         filename = secure_filename(file.filename)
         blob_path = f"{category_name}/{level}/{form_class}/{subject}/{term}/{filename}"
+        print(f"📁 Saving to GCS: {blob_path}")
 
         bucket = get_bucket()
         blob = bucket.blob(blob_path)
         blob.upload_from_file(file.stream, content_type=file.content_type)
 
         file_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{blob_path}"
+        print(f"✅ File uploaded to: {file_url}")
 
         resource = Resource(
             filename=filename,
@@ -123,18 +129,20 @@ def admin_upload_file():
         )
         db.session.add(resource)
         db.session.commit()
+        print("✅ File metadata saved to DB")
 
         return jsonify({"message": "File uploaded successfully.", "file_url": file_url}), 201
 
     except Exception as e:
+        print(f"🔥 Upload error: {str(e)}")
         return jsonify({"error": "Failed to upload file", "details": str(e)}), 500
 
-# ✅ List All Files Uploaded by Admin
+# ✅ List All Files
 @admin_routes.route("/api/admin/files", methods=["GET", "OPTIONS"])
 def list_uploaded_files():
     if request.method == "OPTIONS":
         response = jsonify({"message": "CORS preflight OK"})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Origin", "*")
         response.headers.add("Access-Control-Allow-Credentials", "true")
         return response
 
@@ -145,6 +153,8 @@ def list_uploaded_files():
             return jsonify({"error": "Admin access required"}), 403
 
         resources = Resource.query.all()
+        print(f"📋 Listing {len(resources)} uploaded files")
+
         files = [{
             "id": res.id,
             "filename": res.filename,
@@ -160,9 +170,10 @@ def list_uploaded_files():
         return jsonify(files), 200
 
     except Exception as e:
+        print(f"🔥 Fetch files error: {str(e)}")
         return jsonify({"error": "Failed to fetch files", "details": str(e)}), 500
 
-# ✅ Rename Uploaded File
+# ✅ Rename File
 @admin_routes.route("/api/admin/rename", methods=["PATCH"])
 def rename_uploaded_file():
     try:
@@ -175,6 +186,8 @@ def rename_uploaded_file():
         resource_id = data.get("id")
         new_name = data.get("newName")
 
+        print(f"✏️ Rename requested: ID={resource_id}, new name={new_name}")
+
         if not resource_id or not new_name:
             return jsonify({"error": "Missing id or newName"}), 400
 
@@ -184,7 +197,6 @@ def rename_uploaded_file():
 
         bucket = get_bucket()
         old_blob_path = resource.file_url.replace(f"https://storage.googleapis.com/{BUCKET_NAME}/", "")
-
         old_blob = bucket.blob(old_blob_path)
         if not old_blob.exists():
             return jsonify({"error": "Original file not found on GCS"}), 404
@@ -192,31 +204,28 @@ def rename_uploaded_file():
         new_blob_path = "/".join(old_blob_path.split("/")[:-1]) + f"/{secure_filename(new_name)}"
         new_blob = bucket.blob(new_blob_path)
 
-        try:
-            bucket.copy_blob(old_blob, bucket, new_blob_path)
-            old_blob.delete()
-        except NotFound:
-            return jsonify({"error": "Blob not found during rename"}), 404
+        bucket.copy_blob(old_blob, bucket, new_blob_path)
+        old_blob.delete()
 
         new_file_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{new_blob_path}"
         resource.filename = secure_filename(new_name)
         resource.file_url = new_file_url
         db.session.commit()
 
+        print(f"✅ File renamed successfully: {new_file_url}")
         return jsonify({"message": "File renamed successfully.", "file_url": new_file_url}), 200
 
     except Exception as e:
+        print(f"🔥 Rename error: {str(e)}")
         return jsonify({"error": "Failed to rename file", "details": str(e)}), 500
 
-# ✅ Delete Uploaded File
+# ✅ Delete File
 @admin_routes.route("/api/admin/delete/<int:resource_id>", methods=["DELETE", "OPTIONS"])
 def delete_uploaded_file(resource_id):
     if request.method == "OPTIONS":
         response = jsonify({"message": "CORS preflight for DELETE OK"})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:5173")
+        response.headers.add("Access-Control-Allow-Origin", "*")
         response.headers.add("Access-Control-Allow-Credentials", "true")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-        response.headers.add("Access-Control-Allow-Methods", "DELETE,OPTIONS")
         return response
 
     try:
@@ -232,12 +241,16 @@ def delete_uploaded_file(resource_id):
         blob_path = resource.file_url.replace(f"https://storage.googleapis.com/{BUCKET_NAME}/", "")
         bucket = get_bucket()
         blob = bucket.blob(blob_path)
+
         if blob.exists():
             blob.delete()
 
         db.session.delete(resource)
         db.session.commit()
+        print(f"🗑️ File deleted: {resource.filename}")
+
         return jsonify({"message": "File deleted successfully."}), 200
 
     except Exception as e:
+        print(f"🔥 Delete error: {str(e)}")
         return jsonify({"error": "Failed to delete file", "details": str(e)}), 500
